@@ -1,26 +1,82 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Create custom BizCom theme */
+@plugin "daisyui/theme" {
+  name: "bizcom";
+  default: true;
+  color-scheme: light;
+
+  /* Primary - Burgundy #7f1d40 (same as logo) */
+  --color-primary: oklch(35% 0.15 360);
+  --color-primary-content: oklch(100% 0 0);
+
+  /* Secondary - Rose Dark #9f1239 */
+  --color-secondary: oklch(40% 0.18 15);
+  --color-secondary-content: oklch(100% 0 0);
+
+  /* Accent - Rose Light #be123c */
+  --color-accent: oklch(48% 0.21 15);
+  --color-accent-content: oklch(100% 0 0);
+
+  /* Neutral #171717 */
+  --color-neutral: oklch(15% 0 0);
+  --color-neutral-content: oklch(100% 0 0);
+
+  /* Base colors */
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98% 0.005 240);
+  --color-base-300: oklch(92% 0.01 240);
+  --color-base-content: oklch(15% 0 0);
+
+  /* State colors */
+  --color-info: oklch(60% 0.15 240);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(65% 0.2 145);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(80% 0.18 80);
+  --color-warning-content: oklch(15% 0 0);
+  --color-error: oklch(60% 0.22 25);
+  --color-error-content: oklch(100% 0 0);
+
+  /* Border radius */
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+
+  /* Sizes */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  /* Border */
+  --border: 1px;
+
+  /* Effects */
+  --depth: 1;
+  --noise: 0;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: #f8f9fa;
+  --color-foreground: #171717;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom brand colors for gradients */
+  --color-burgundy: #7f1d40;
+  --color-rose-dark: #9f1239;
+  --color-rose-light: #be123c;
+  --color-primary-light: #9f1239;
+  --color-primary-dark: #5a1530;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  /* Safe area for mobile */
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
