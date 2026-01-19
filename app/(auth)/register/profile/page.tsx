@@ -9,10 +9,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, type ProfileInput } from "@/lib/validations/auth";
 import { ProgressSteps } from "@/components/auth/ProgressSteps";
 import { CountrySelect } from "@/components/auth/CountrySelect";
+import { useUpdateProfileMutation, useLazyGetMeQuery } from "@/store/services/api";
+import { useAppDispatch } from "@/store/hooks";
+import { setUser } from "@/store/slices/authSlice";
 
 export default function RegisterStep3Page() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const [apiError, setApiError] = useState("");
+
+  const [updateProfile, { isLoading }] = useUpdateProfileMutation();
+  const [getMe] = useLazyGetMeQuery();
 
   const {
     register,
@@ -27,21 +34,41 @@ export default function RegisterStep3Page() {
   });
 
   const handleComplete = async (data: ProfileInput) => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setApiError("");
 
-    // Get existing registration data
-    const existing = JSON.parse(sessionStorage.getItem("registration") || "{}");
-    const fullData = { ...existing, ...data };
+    try {
+      await updateProfile({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        gender: data.gender as "male" | "female" | "other",
+        nationality: data.nationality,
+        phone_dial_code: data.phoneDialCode,
+        phone_number: data.phoneNumber,
+      }).unwrap();
 
-    console.log("Registration complete:", fullData);
+      // Fetch user data and update store (using session cookie authentication)
+      const meResult = await getMe().unwrap();
+      if (meResult.data) {
+        const userData = meResult.data;
+        dispatch(
+          setUser({
+            id: String(userData.id),
+            name: `${userData.first_name || ""} ${userData.last_name || ""}`.trim() || userData.email,
+            email: userData.email,
+            phone: userData.phone_number
+              ? `${userData.phone_dial_code || ""} ${userData.phone_number}`
+              : undefined,
+          })
+        );
+      }
 
-    // Clear registration data
-    sessionStorage.removeItem("registration");
-
-    setIsLoading(false);
-    alert("Registration successful! Redirecting to sign in...");
-    router.push("/signin");
+      router.push("/");
+    } catch (error) {
+      const err = error as { data?: { meta?: { message?: string } } };
+      setApiError(
+        err.data?.meta?.message || "Failed to update profile. Please try again."
+      );
+    }
   };
 
   return (
@@ -69,6 +96,12 @@ export default function RegisterStep3Page() {
               </p>
 
               <form onSubmit={handleSubmit(handleComplete)} className="space-y-4">
+                {apiError && (
+                  <div className="alert alert-error text-sm">
+                    <span>{apiError}</span>
+                  </div>
+                )}
+
                 {/* Name Fields */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>

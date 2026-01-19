@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -9,16 +9,30 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { emailSchema, type EmailInput } from "@/lib/validations/auth";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { ProgressSteps } from "@/components/auth/ProgressSteps";
-
-const MOCK_OTP = "123456";
+import {
+  useLazyGetCsrfCookieQuery,
+  useObtainRegistrationOtpMutation,
+  useVerifyRegistrationOtpMutation,
+} from "@/store/services/api";
+import { useAppDispatch } from "@/store/hooks";
+import { setRegistrationEmail } from "@/store/slices/authSlice";
 
 export default function RegisterStep1Page() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [step, setStep] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const [getCsrfCookie] = useLazyGetCsrfCookieQuery();
+  const [obtainOtp, { isLoading: isObtaining }] =
+    useObtainRegistrationOtpMutation();
+  const [verifyOtp, { isLoading: isVerifying }] =
+    useVerifyRegistrationOtpMutation();
+
+  const isLoading = isObtaining || isVerifying;
 
   const {
     register,
@@ -29,34 +43,42 @@ export default function RegisterStep1Page() {
   });
 
   const handleSendOtp = async (data: EmailInput) => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setEmail(data.email);
-    // Save email to sessionStorage for next steps
-    sessionStorage.setItem("registration", JSON.stringify({ email: data.email }));
-    setStep("otp");
-    setIsLoading(false);
-    alert(`OTP sent to ${data.email}. Use test OTP: ${MOCK_OTP}`);
+    setApiError("");
+    try {
+      // First, get CSRF cookie for Sanctum SPA authentication
+      await getCsrfCookie().unwrap();
+      await obtainOtp({ email: data.email }).unwrap();
+      setEmail(data.email);
+      dispatch(setRegistrationEmail(data.email));
+      setStep("otp");
+    } catch (error) {
+      const err = error as { data?: { meta?: { message?: string } } };
+      setApiError(
+        err.data?.meta?.message || "Failed to send OTP. Please try again."
+      );
+    }
   };
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtp = useCallback(async () => {
     if (otp.length !== 6) {
       setOtpError("Please enter 6-digit OTP");
       return;
     }
 
-    setIsLoading(true);
     setOtpError("");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setApiError("");
 
-    if (otp === MOCK_OTP) {
-      // OTP verified, proceed to password step
+    try {
+      // Session cookie is set automatically by Sanctum after successful verification
+      await verifyOtp({ email, otp }).unwrap();
       router.push("/register/password");
-    } else {
-      setOtpError("Invalid OTP. Please try again. (Hint: Use 123456)");
+    } catch (error) {
+      const err = error as { data?: { meta?: { message?: string } } };
+      setOtpError(
+        err.data?.meta?.message || "Invalid OTP. Please try again."
+      );
     }
-    setIsLoading(false);
-  };
+  }, [otp, email, verifyOtp, router]);
 
   return (
     <div className="min-h-screen bg-base-200 flex flex-col">
@@ -84,6 +106,12 @@ export default function RegisterStep1Page() {
                   <p className="text-gray-600 text-center text-sm mb-4">
                     We&apos;ll send a verification code to your email
                   </p>
+
+                  {apiError && (
+                    <div className="alert alert-error text-sm">
+                      <span>{apiError}</span>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">

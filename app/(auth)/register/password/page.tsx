@@ -8,12 +8,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { passwordSchema, type PasswordInput } from "@/lib/validations/auth";
 import { ProgressSteps } from "@/components/auth/ProgressSteps";
+import { useUpdatePasswordMutation } from "@/store/services/api";
 
 export default function RegisterStep2Page() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const [updatePassword, { isLoading }] = useUpdatePasswordMutation();
 
   const {
     register,
@@ -24,27 +27,28 @@ export default function RegisterStep2Page() {
   });
 
   const handleContinue = async (data: PasswordInput) => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    if (!data.password) {
+      // If no password provided, skip to profile
+      router.push("/register/profile");
+      return;
+    }
 
-    // Save password to sessionStorage
-    const existing = JSON.parse(sessionStorage.getItem("registration") || "{}");
-    sessionStorage.setItem(
-      "registration",
-      JSON.stringify({ ...existing, password: data.password || null })
-    );
-
-    setIsLoading(false);
-    router.push("/register/profile");
+    setApiError("");
+    try {
+      await updatePassword({
+        password: data.password,
+        password_confirmation: data.confirmPassword || data.password,
+      }).unwrap();
+      router.push("/register/profile");
+    } catch (error) {
+      const err = error as { data?: { meta?: { message?: string } } };
+      setApiError(
+        err.data?.meta?.message || "Failed to set password. Please try again."
+      );
+    }
   };
 
   const handleSkip = () => {
-    // Save null password to sessionStorage
-    const existing = JSON.parse(sessionStorage.getItem("registration") || "{}");
-    sessionStorage.setItem(
-      "registration",
-      JSON.stringify({ ...existing, password: null })
-    );
     router.push("/register/profile");
   };
 
@@ -73,6 +77,12 @@ export default function RegisterStep2Page() {
               </p>
 
               <form onSubmit={handleSubmit(handleContinue)} className="space-y-4">
+                {apiError && (
+                  <div className="alert alert-error text-sm">
+                    <span>{apiError}</span>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Password

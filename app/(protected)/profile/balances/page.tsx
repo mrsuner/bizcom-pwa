@@ -10,7 +10,7 @@ export default function BalancesPage() {
       <PageHeader title="Balances" />
 
       <div className="space-y-4">
-        <BalanceDisplayCard balance={userBalance.bizCoins} />
+        <BalanceDisplayCard balance={userBalance} />
 
         <div>
           <h2 className="text-lg font-semibold text-base-content mb-3">

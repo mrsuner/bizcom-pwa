@@ -3,20 +3,18 @@ import type { User } from "@/types";
 
 interface AuthState {
   user: User | null;
+  registrationEmail: string | null;
   isLoggedIn: boolean;
   isLoading: boolean;
 }
 
-// For development: set isLoggedIn to true with mockUser
-// For production: set isLoggedIn to false with user: null
+// Note: Token is now managed by HttpOnly cookies (Sanctum SPA mode)
+// No need to store token in localStorage or state
+
 const initialState: AuthState = {
-  user: {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+65 9123 4567",
-  },
-  isLoggedIn: true,
+  user: null,
+  registrationEmail: null,
+  isLoggedIn: false,
   isLoading: false,
 };
 
@@ -28,15 +26,20 @@ export const authSlice = createSlice({
       state.user = action.payload;
       state.isLoggedIn = !!action.payload;
     },
-    login: (state, action: PayloadAction<User>) => {
-      state.user = action.payload;
+    setRegistrationEmail: (state, action: PayloadAction<string | null>) => {
+      state.registrationEmail = action.payload;
+    },
+    login: (state, action: PayloadAction<{ user: User }>) => {
+      state.user = action.payload.user;
       state.isLoggedIn = true;
       state.isLoading = false;
+      state.registrationEmail = null;
     },
     logout: (state) => {
       state.user = null;
       state.isLoggedIn = false;
       state.isLoading = false;
+      state.registrationEmail = null;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
@@ -44,5 +47,11 @@ export const authSlice = createSlice({
   },
 });
 
-export const { setUser, login, logout, setLoading } = authSlice.actions;
+export const {
+  setUser,
+  setRegistrationEmail,
+  login,
+  logout,
+  setLoading,
+} = authSlice.actions;
 export default authSlice.reducer;

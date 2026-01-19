@@ -29,7 +29,7 @@ export function PaymentCard({ payment }: PaymentCardProps) {
   const formattedAmount = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: payment.currency,
-  }).format(payment.amount);
+  }).format(parseFloat(payment.amount));
 
   return (
     <div className="card bg-base-100 shadow-sm">
@@ -37,7 +37,7 @@ export function PaymentCard({ payment }: PaymentCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <p className="text-sm text-base-content/60">
-              Invoice #{payment.reference_number}
+              Invoice #{payment.reference_number || "N/A"}
             </p>
             <p className="text-lg font-semibold text-base-content mt-1">
               {formattedAmount}

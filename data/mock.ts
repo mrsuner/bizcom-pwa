@@ -27,11 +27,41 @@ export const services: Service[] = [
   { id: "9", name: "CSR", icon: "Heart", href: "/services/csr" },
 ];
 
-export const userBalance: UserBalance = {
-  companyName: "Client Co Pte. Ltd.",
-  isPremium: true,
-  bizCoins: 12450,
-};
+export const mockBalances: UserBalance[] = [
+  {
+    id: 1,
+    user_id: 1,
+    balance: "12450.00",
+    is_based: true,
+    country_code: "SGP",
+    currency_code: "SGD",
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2026-01-19T00:00:00.000Z",
+  },
+  {
+    id: 2,
+    user_id: 1,
+    balance: "500.00",
+    is_based: false,
+    country_code: "USA",
+    currency_code: "USD",
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2026-01-19T00:00:00.000Z",
+  },
+  {
+    id: 3,
+    user_id: 1,
+    balance: "250.00",
+    is_based: false,
+    country_code: "GBR",
+    currency_code: "GBP",
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2026-01-19T00:00:00.000Z",
+  },
+];
+
+// For backward compatibility
+export const userBalance = mockBalances[0];
 
 export const announcement: Announcement = {
   id: "1",
@@ -150,25 +180,36 @@ export const mockCompanies: Company[] = [
 
 export const mockPayments: Payment[] = [
   {
-    id: "1",
-    amount: 1500,
+    id: 1,
+    user_id: 1,
+    amount: "1500.00",
     currency: "SGD",
     status: "confirmed",
     payment_method: "bank_transfer",
     reference_number: "INV-2025-001",
+    notes: null,
     paid_at: "2025-12-10",
     confirmed_at: "2025-12-11",
+    due_at: null,
+    receipts: [],
     created_at: "2025-12-01",
+    updated_at: "2025-12-11",
   },
   {
-    id: "2",
-    amount: 800,
+    id: 2,
+    user_id: 1,
+    amount: "800.00",
     currency: "SGD",
     status: "pending",
     payment_method: "bank_transfer",
     reference_number: "INV-2025-002",
+    notes: null,
+    paid_at: null,
+    confirmed_at: null,
     due_at: "2026-01-15",
+    receipts: [],
     created_at: "2026-01-01",
+    updated_at: "2026-01-01",
   },
 ];
 

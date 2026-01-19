@@ -33,10 +33,18 @@ export function OtpInput({
     inputRefs.current[0]?.focus();
   }, []);
 
+  // Track if we've already called onComplete for this value
+  const completedValueRef = useRef<string | null>(null);
+
   useEffect(() => {
-    // Call onComplete when all digits are filled
-    if (value.length === length && onComplete) {
+    // Call onComplete when all digits are filled, but only once per complete value
+    if (value.length === length && onComplete && completedValueRef.current !== value) {
+      completedValueRef.current = value;
       onComplete(value);
+    }
+    // Reset when value becomes incomplete
+    if (value.length < length) {
+      completedValueRef.current = null;
     }
   }, [value, length, onComplete]);
 

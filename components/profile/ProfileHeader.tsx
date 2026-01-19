@@ -4,6 +4,14 @@ import { User as UserIcon } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 import { userBalance } from "@/data/mock";
 import { getGreeting } from "@/lib/utils/greeting";
+import { getFlagEmoji } from "@/lib/utils/country";
+
+function formatAmount(balance: string): string {
+  return parseFloat(balance).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
 export function ProfileHeader() {
   const user = useAppSelector((state) => state.auth.user);
@@ -24,7 +32,8 @@ export function ProfileHeader() {
               {user.name}
             </h2>
             <p className="text-sm text-base-content/60">
-              {userBalance.bizCoins.toLocaleString()} BizCoins
+              {getFlagEmoji(userBalance.country_code)}{" "}
+              {formatAmount(userBalance.balance)} BizCoins
             </p>
             <p className="text-sm text-primary">{getGreeting()}</p>
           </div>

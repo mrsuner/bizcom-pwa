@@ -80,3 +80,13 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Hide scrollbar for horizontal scroll containers */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

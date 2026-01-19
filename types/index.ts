@@ -6,9 +6,14 @@ export interface Service {
 }
 
 export interface UserBalance {
-  companyName: string;
-  isPremium: boolean;
-  bizCoins: number;
+  id: number;
+  user_id: number;
+  balance: string; // decimal as string from API
+  is_based: boolean;
+  country_code: string; // 3-letter: "SGP", "USA"
+  currency_code: string; // 3-letter: "SGD", "USD"
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Announcement {
@@ -79,12 +84,31 @@ export interface TopupReceipt {
 }
 
 // User types
-export interface User {
-  id: string;
+export interface UserEntity {
+  id: number;
+  first_name: string | null;
+  last_name: string | null;
+  gender: string | null;
+  nationality: string | null;
+  phone_number: string | null;
+  phone_dial_code: string | null;
+}
+
+export interface UserRole {
   name: string;
+}
+
+export interface User {
+  id: number;
   email: string;
-  phone?: string;
-  avatar?: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone_number: string | null;
+  phone_dial_code: string | null;
+  entity_id: number | null;
+  entity?: UserEntity;
+  roles: UserRole[];
+  balances?: UserBalance[];
 }
 
 // Profile types
@@ -116,18 +140,49 @@ export interface Company {
 }
 
 // Payment types
+export interface Receipt {
+  id: number;
+  client_filename: string;
+  mime_type: string;
+  size: number;
+  url: string | null;
+  created_at: string;
+}
+
 export interface Payment {
-  id: string;
-  amount: number;
+  id: number;
+  user_id: number;
+  amount: string;
   currency: string;
   status: "open" | "pending" | "paid" | "confirmed" | "cancelled";
   payment_method: string;
-  reference_number: string;
-  notes?: string;
-  paid_at?: string;
-  confirmed_at?: string;
-  due_at?: string;
+  reference_number: string | null;
+  notes: string | null;
+  paid_at: string | null;
+  confirmed_at: string | null;
+  due_at: string | null;
+  receipts: Receipt[];
   created_at: string;
+  updated_at: string;
+}
+
+// Pagination types
+export interface PaginationMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  links: {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: PaginationMeta;
 }
 
 // File types
