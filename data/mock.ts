@@ -135,10 +135,14 @@ export const announcementDetails: Record<string, AnnouncementDetail> = {
 };
 
 export const mockUser: User = {
-  id: "1",
-  name: "John Doe",
+  id: 1,
   email: "john@example.com",
-  phone: "+65 9123 4567",
+  first_name: "John",
+  last_name: "Doe",
+  phone_number: "91234567",
+  phone_dial_code: "+65",
+  entity_id: null,
+  roles: [],
 };
 
 export const profileMenuItems: ProfileMenuItem[] = [

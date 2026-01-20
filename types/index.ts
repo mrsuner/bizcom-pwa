@@ -100,6 +100,7 @@ export interface UserRole {
 
 export interface User {
   id: number;
+  name?: string;
   email: string;
   first_name: string | null;
   last_name: string | null;

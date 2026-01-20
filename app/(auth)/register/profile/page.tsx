@@ -11,7 +11,8 @@ import { ProgressSteps } from "@/components/auth/ProgressSteps";
 import { CountrySelect } from "@/components/auth/CountrySelect";
 import { useUpdateProfileMutation, useLazyGetMeQuery } from "@/store/services/api";
 import { useAppDispatch } from "@/store/hooks";
-import { setUser } from "@/store/slices/authSlice";
+import { login } from "@/store/slices/authSlice";
+import type { User } from "@/types";
 
 export default function RegisterStep3Page() {
   const router = useRouter();
@@ -49,17 +50,19 @@ export default function RegisterStep3Page() {
       // Fetch user data and update store (using session cookie authentication)
       const meResult = await getMe().unwrap();
       if (meResult.data) {
-        const userData = meResult.data;
-        dispatch(
-          setUser({
-            id: String(userData.id),
-            name: `${userData.first_name || ""} ${userData.last_name || ""}`.trim() || userData.email,
-            email: userData.email,
-            phone: userData.phone_number
-              ? `${userData.phone_dial_code || ""} ${userData.phone_number}`
-              : undefined,
-          })
-        );
+        const user: User = {
+          id: meResult.data.id,
+          email: meResult.data.email,
+          first_name: meResult.data.first_name,
+          last_name: meResult.data.last_name,
+          phone_number: meResult.data.phone_number,
+          phone_dial_code: meResult.data.phone_dial_code,
+          entity_id: meResult.data.entity_id,
+          entity: meResult.data.entity,
+          roles: meResult.data.roles,
+          balances: meResult.data.balances,
+        };
+        dispatch(login({ user }));
       }
 
       router.push("/");
