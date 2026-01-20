@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, ArrowLeftRight } from "lucide-react";
 import type { UserBalance } from "@/types";
 import { getFlagEmoji } from "@/lib/utils/country";
 
@@ -39,13 +39,20 @@ export function BalanceCard({ balance }: BalanceCardProps) {
           <p className="text-sm font-medium">BizCoins</p>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex gap-2">
           <Link
             href="/topup"
             className="btn btn-sm bg-white/20 border-0 text-white hover:bg-white/30"
           >
             <Plus size={16} />
             Topup
+          </Link>
+          <Link
+            href="/transfer"
+            className="btn btn-sm bg-white/20 border-0 text-white hover:bg-white/30"
+          >
+            <ArrowLeftRight size={16} />
+            Transfer
           </Link>
         </div>
 

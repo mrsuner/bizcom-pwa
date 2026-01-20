@@ -16,15 +16,15 @@ import type {
 } from "@/types";
 
 export const services: Service[] = [
-  { id: "1", name: "Incorporation", icon: "Building2", href: "/services/incorporation" },
-  { id: "2", name: "LMS", icon: "BookOpen", href: "/services/lms" },
-  { id: "3", name: "HR", icon: "Users", href: "/services/hr" },
-  { id: "4", name: "Data", icon: "BarChart3", href: "/services/data" },
-  { id: "5", name: "Compliance", icon: "ShieldCheck", href: "/services/compliance" },
-  { id: "6", name: "Marketing", icon: "Megaphone", href: "/services/marketing" },
-  { id: "7", name: "Sales", icon: "TrendingUp", href: "/services/sales" },
-  { id: "8", name: "Finance", icon: "DollarSign", href: "/services/finance" },
-  { id: "9", name: "CSR", icon: "Heart", href: "/services/csr" },
+    { id: "1", name: "HR", icon: "Users", href: "/services/hr" },
+    { id: "2", name: "LMS", icon: "BookOpen", href: "/services/lms" },
+    { id: "3", name: "Marketing", icon: "Megaphone", href: "/services/marketing" },
+    { id: "4", name: "Data", icon: "BarChart3", href: "/services/data" },
+    { id: "5", name: "Incorporation", icon: "Building2", href: "/services/incorporation" },
+    { id: "6", name: "Sales", icon: "TrendingUp", href: "/services/sales" },
+    { id: "7", name: "Compliance", icon: "ShieldCheck", href: "/services/compliance" },
+    { id: "8", name: "CSR", icon: "Heart", href: "/services/csr" },
+    { id: "9", name: "Finance", icon: "DollarSign", href: "/services/finance" },
 ];
 
 export const mockBalances: UserBalance[] = [

@@ -29,6 +29,27 @@ interface VerifyOtpResponse {
   };
 }
 
+// Login request types
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface LoginVerifyOtpRequest {
+  email: string;
+  password: string;
+  otp: string;
+}
+
+interface PasswordlessOtpObtainRequest {
+  email: string;
+}
+
+interface PasswordlessOtpVerifyRequest {
+  email: string;
+  otp: string;
+}
+
 interface UpdatePasswordRequest {
   password: string;
   password_confirmation: string;
@@ -47,6 +68,25 @@ interface GetMyPaymentsParams {
   page?: number;
   per_page?: number;
   status?: Payment["status"];
+}
+
+interface BalanceConversionRequest {
+  from_currency: string;
+  to_currency: string;
+  amount: string;
+}
+
+interface BalanceConversionResponse {
+  from_balance: {
+    currency_code: string;
+    previous_balance: string;
+    new_balance: string;
+  };
+  to_balance: {
+    currency_code: string;
+    previous_balance: string;
+    new_balance: string;
+  };
 }
 
 interface MeResponse {
@@ -120,6 +160,47 @@ export const api = createApi({
       }),
     }),
 
+    // Login endpoints (password-based with OTP verification)
+    login: builder.mutation<ApiResponse, LoginRequest>({
+      query: (body) => ({
+        url: "/login",
+        method: "POST",
+        body,
+      }),
+    }),
+    verifyLoginOtp: builder.mutation<ApiResponse<VerifyOtpResponse>, LoginVerifyOtpRequest>({
+      query: (body) => ({
+        url: "/verify-otp",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // Passwordless OTP login endpoints
+    obtainPasswordlessOtp: builder.mutation<ApiResponse, PasswordlessOtpObtainRequest>({
+      query: (body) => ({
+        url: "/login/otp/obtain",
+        method: "POST",
+        body,
+      }),
+    }),
+    verifyPasswordlessOtp: builder.mutation<ApiResponse<VerifyOtpResponse>, PasswordlessOtpVerifyRequest>({
+      query: (body) => ({
+        url: "/login/otp/verify",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // Logout endpoint
+    logout: builder.mutation<ApiResponse, void>({
+      query: () => ({
+        url: "/logout",
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
+    }),
+
     // Me endpoints
     getMe: builder.query<ApiResponse<MeResponse>, void>({
       query: () => "/me?with=balances",
@@ -163,6 +244,29 @@ export const api = createApi({
       query: (id) => `/me/payments/${id}`,
       providesTags: (_result, _error, id) => [{ type: "Payment", id }],
     }),
+    uploadPaymentReceipt: builder.mutation<
+      ApiResponse<{ payment_id: number; file_id: number }>,
+      FormData
+    >({
+      query: (formData) => ({
+        url: "/me/payments",
+        method: "POST",
+        body: formData,
+        // Don't set Content-Type, let browser auto-set multipart/form-data with boundary
+      }),
+      invalidatesTags: ["Payment", "User"], // Refresh payment list and user balance
+    }),
+    convertBalance: builder.mutation<
+      ApiResponse<BalanceConversionResponse>,
+      BalanceConversionRequest
+    >({
+      query: (body) => ({
+        url: "/me/balances/conversion",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["User"], // Refresh user data to get updated balances
+    }),
   }),
 });
 
@@ -170,10 +274,17 @@ export const {
   useLazyGetCsrfCookieQuery,
   useObtainRegistrationOtpMutation,
   useVerifyRegistrationOtpMutation,
+  useLoginMutation,
+  useVerifyLoginOtpMutation,
+  useObtainPasswordlessOtpMutation,
+  useVerifyPasswordlessOtpMutation,
+  useLogoutMutation,
   useGetMeQuery,
   useLazyGetMeQuery,
   useUpdatePasswordMutation,
   useUpdateProfileMutation,
   useGetMyPaymentsQuery,
   useGetPaymentQuery,
+  useUploadPaymentReceiptMutation,
+  useConvertBalanceMutation,
 } = api;

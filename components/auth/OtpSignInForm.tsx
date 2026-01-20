@@ -4,18 +4,31 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
 import { emailSchema, type EmailInput } from "@/lib/validations/auth";
 import { OtpInput } from "./OtpInput";
-
-const MOCK_OTP = "123456";
+import {
+  useLazyGetCsrfCookieQuery,
+  useObtainPasswordlessOtpMutation,
+  useVerifyPasswordlessOtpMutation,
+  useLazyGetMeQuery,
+} from "@/store/services/api";
+import { login as loginAction } from "@/store/slices/authSlice";
+import type { User } from "@/types";
 
 export function OtpSignInForm() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [step, setStep] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const [getCsrfCookie] = useLazyGetCsrfCookieQuery();
+  const [obtainOtp, { isLoading: isSendingOtp }] = useObtainPasswordlessOtpMutation();
+  const [verifyOtp, { isLoading: isVerifyLoading }] = useVerifyPasswordlessOtpMutation();
+  const [getMe] = useLazyGetMeQuery();
 
   const {
     register,
@@ -26,14 +39,22 @@ export function OtpSignInForm() {
   });
 
   const handleSendOtp = async (data: EmailInput) => {
-    setIsLoading(true);
-    // Mock send OTP - simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setEmail(data.email);
-    setStep("otp");
-    setIsLoading(false);
-    // Show toast/alert that OTP was sent
-    alert(`OTP sent to ${data.email}. Use test OTP: ${MOCK_OTP}`);
+    setApiError("");
+    try {
+      // Get CSRF cookie first
+      await getCsrfCookie().unwrap();
+
+      // Request OTP
+      await obtainOtp({ email: data.email }).unwrap();
+
+      // Success - save email and switch to OTP step
+      setEmail(data.email);
+      setStep("otp");
+    } catch (error) {
+      // Handle API errors
+      const apiError = error as { data?: { meta?: { message?: string } } };
+      setApiError(apiError?.data?.meta?.message || "No account found with this email address.");
+    }
   };
 
   const handleVerifyOtp = async () => {
@@ -42,19 +63,23 @@ export function OtpSignInForm() {
       return;
     }
 
-    setIsLoading(true);
     setOtpError("");
+    try {
+      // Verify OTP
+      await verifyOtp({ email, otp }).unwrap();
 
-    // Mock verify OTP
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Get user data and dispatch login action
+      const meResponse = await getMe().unwrap();
+      if (meResponse.data) {
+        dispatch(loginAction({ user: meResponse.data as User }));
+      }
 
-    if (otp === MOCK_OTP) {
-      console.log("Sign in with OTP:", { email, otp });
+      // Redirect to home
       router.push("/");
-    } else {
-      setOtpError("Invalid OTP. Please try again. (Hint: Use 123456)");
+    } catch (error) {
+      const apiError = error as { data?: { meta?: { message?: string } } };
+      setOtpError(apiError?.data?.meta?.message || "Invalid or expired OTP");
     }
-    setIsLoading(false);
   };
 
   if (step === "otp") {
@@ -72,16 +97,16 @@ export function OtpSignInForm() {
           onChange={setOtp}
           onComplete={handleVerifyOtp}
           error={otpError}
-          disabled={isLoading}
+          disabled={isVerifyLoading}
         />
 
         <button
           type="button"
           onClick={handleVerifyOtp}
-          disabled={isLoading || otp.length !== 6}
+          disabled={isVerifyLoading || otp.length !== 6}
           className="btn btn-primary w-full mt-4"
         >
-          {isLoading ? <span className="loading loading-spinner loading-sm" /> : "Verify & Sign In"}
+          {isVerifyLoading ? <span className="loading loading-spinner loading-sm" /> : "Verify & Sign In"}
         </button>
 
         <button
@@ -101,6 +126,12 @@ export function OtpSignInForm() {
 
   return (
     <form onSubmit={handleSubmit(handleSendOtp)} className="space-y-4">
+      {apiError && (
+        <div className="alert alert-error text-sm">
+          {apiError}
+        </div>
+      )}
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Email
@@ -118,10 +149,10 @@ export function OtpSignInForm() {
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isSendingOtp}
         className="btn btn-primary w-full"
       >
-        {isLoading ? <span className="loading loading-spinner loading-sm" /> : "Send OTP"}
+        {isSendingOtp ? <span className="loading loading-spinner loading-sm" /> : "Send OTP"}
       </button>
     </form>
   );
