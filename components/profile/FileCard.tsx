@@ -1,8 +1,16 @@
-import { FileText, Image } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { FileText, Image, Trash2, Download, MoreVertical } from "lucide-react";
+import {
+  useDeleteFileMutation,
+  useLazyGetFileDetailsQuery,
+} from "@/store/services/api";
 import type { UserFile } from "@/types";
 
 interface FileCardProps {
   file: UserFile;
+  onDeleted?: () => void;
 }
 
 function formatFileSize(bytes: number): string {
@@ -19,7 +27,13 @@ function getFileTypeLabel(mimeType: string): string {
   return "File";
 }
 
-export function FileCard({ file }: FileCardProps) {
+export function FileCard({ file, onDeleted }: FileCardProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const [deleteFile] = useDeleteFileMutation();
+  const [getFileDetails] = useLazyGetFileDetailsQuery();
+
   const date = new Date(file.created_at).toLocaleDateString("en-US", {
     month: "short",
     year: "numeric",
@@ -29,6 +43,37 @@ export function FileCard({ file }: FileCardProps) {
   const Icon = isImage ? Image : FileText;
   const typeLabel = getFileTypeLabel(file.mime_type);
   const sizeLabel = formatFileSize(file.size);
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this file?")) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteFile(file.id).unwrap();
+      onDeleted?.();
+    } catch {
+      alert("Failed to delete file. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const result = await getFileDetails(file.id).unwrap();
+      const url = result.data?.file?.url;
+      if (url) {
+        window.open(url, "_blank");
+      } else {
+        alert("File URL not available.");
+      }
+    } catch {
+      alert("Failed to get file URL. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="card bg-base-100 shadow-sm">
@@ -47,6 +92,50 @@ export function FileCard({ file }: FileCardProps) {
             <p className="text-xs text-base-content/40 mt-1">
               Uploaded {date}
             </p>
+          </div>
+          <div className="dropdown dropdown-end">
+            <button
+              type="button"
+              tabIndex={0}
+              className="btn btn-ghost btn-sm btn-circle"
+            >
+              <MoreVertical size={16} />
+            </button>
+            <ul
+              tabIndex={0}
+              className="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow"
+            >
+              <li>
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className="flex items-center gap-2"
+                >
+                  {isDownloading ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : (
+                    <Download size={16} />
+                  )}
+                  View
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex items-center gap-2 text-error"
+                >
+                  {isDeleting ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : (
+                    <Trash2 size={16} />
+                  )}
+                  Delete
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

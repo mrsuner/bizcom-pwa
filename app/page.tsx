@@ -6,8 +6,8 @@ import { SecondaryBalances } from "@/components/home/SecondaryBalances";
 import { ServicesSection } from "@/components/home/ServicesSection";
 import { AnnouncementBanner } from "@/components/home/AnnouncementBanner";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useGetMeQuery } from "@/store/services/api";
-import { services, announcement, mockBalances } from "@/data/mock";
+import { useGetMeQuery, useGetAnnouncementsQuery } from "@/store/services/api";
+import { services, mockBalances } from "@/data/mock";
 import type { UserBalance } from "@/types";
 
 // Default balance to show when no balance data is available
@@ -27,9 +27,13 @@ export default function HomePage() {
   const { data, isLoading: dataLoading } = useGetMeQuery(undefined, {
     skip: !isLoggedIn,
   });
+  const { data: announcementsData, isLoading: announcementsLoading } = useGetAnnouncementsQuery({
+    per_page: 2,
+  });
 
   // Use API data or fall back to mock data when logged in
   const balances: UserBalance[] = data?.data?.balances ?? mockBalances;
+  const announcements = announcementsData?.data ?? [];
 
   // Split balances into primary and secondary
   // If no balances exist, use defaultBalance
@@ -63,7 +67,7 @@ export default function HomePage() {
         <GuestCard />
       )}
       <ServicesSection services={services} />
-      <AnnouncementBanner announcement={announcement} />
+      <AnnouncementBanner announcements={announcements} isLoading={announcementsLoading} />
     </div>
   );
 }

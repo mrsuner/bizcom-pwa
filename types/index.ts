@@ -42,6 +42,25 @@ export interface AnnouncementDetail {
   tabs: AnnouncementTab[];
 }
 
+// API response type for announcement
+export interface AnnouncementApi {
+  id: number;
+  slug: string;
+  title: string;
+  description: string | null;
+  cover_image: string | null;
+  author_id: number | null;
+  author?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  tabs: AnnouncementTab[] | null;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface NavItem {
   href: string;
   icon: string;
@@ -188,13 +207,34 @@ export interface PaginatedResponse<T> {
 
 // File types
 export interface UserFile {
-  id: string;
+  id: number;
   client_filename: string;
   mime_type: string;
   size: number;
-  expires_at?: string;
+  expires_at: string | null;
   is_persistent: boolean;
+  url?: string | null;
   created_at: string;
+  updated_at: string;
+}
+
+export interface UserFilesResponse {
+  files: UserFile[];
+  pagination: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
+export interface UserFileDetailResponse {
+  file: UserFile & {
+    drive: string;
+    path: string;
+    hash: string | null;
+    user_id: number;
+  };
 }
 
 // Balance types

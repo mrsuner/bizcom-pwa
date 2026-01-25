@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { getCookie } from "@/lib/utils/cookie";
-import type { Payment, PaginatedResponse, UserBalance } from "@/types";
+import type { Payment, PaginatedResponse, UserBalance, UserFilesResponse, UserFileDetailResponse, AnnouncementApi } from "@/types";
 
 // API Response types
 interface ApiMeta {
@@ -89,6 +89,31 @@ interface BalanceConversionResponse {
   };
 }
 
+interface GetMyFilesParams {
+  page?: number;
+  paginate?: number;
+}
+
+interface GetAnnouncementsParams {
+  per_page?: number;
+}
+
+interface AnnouncementsListResponse {
+  data: AnnouncementApi[];
+  links: {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
 interface MeResponse {
   id: number;
   first_name: string | null;
@@ -126,7 +151,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ["User", "Company", "KYC", "Payment"],
+  tagTypes: ["User", "Company", "KYC", "Payment", "File"],
   endpoints: (builder) => ({
     // CSRF Cookie endpoint - must be called before any authenticated requests
     // Note: This endpoint is at the root, not under /api, so we need the full URL
@@ -267,6 +292,56 @@ export const api = createApi({
       }),
       invalidatesTags: ["User"], // Refresh user data to get updated balances
     }),
+
+    // File endpoints
+    getMyFiles: builder.query<ApiResponse<UserFilesResponse>, GetMyFilesParams | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append("page", params.page.toString());
+        if (params?.paginate) queryParams.append("paginate", params.paginate.toString());
+        const queryString = queryParams.toString();
+        return `/me/files${queryString ? `?${queryString}` : ""}`;
+      },
+      providesTags: (result) =>
+        result?.data?.files
+          ? [
+              ...result.data.files.map(({ id }) => ({ type: "File" as const, id })),
+              { type: "File", id: "LIST" },
+            ]
+          : [{ type: "File", id: "LIST" }],
+    }),
+    getFileDetails: builder.query<ApiResponse<UserFileDetailResponse>, number>({
+      query: (id) => `/me/files/${id}`,
+      providesTags: (_result, _error, id) => [{ type: "File", id }],
+    }),
+    uploadFile: builder.mutation<ApiResponse<{ file_id: number }>, FormData>({
+      query: (formData) => ({
+        url: "/me/files",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: [{ type: "File", id: "LIST" }],
+    }),
+    deleteFile: builder.mutation<ApiResponse, number>({
+      query: (id) => ({
+        url: `/me/files/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "File", id },
+        { type: "File", id: "LIST" },
+      ],
+    }),
+
+    // Public endpoints (no auth required)
+    getAnnouncements: builder.query<AnnouncementsListResponse, GetAnnouncementsParams | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.per_page) queryParams.append("per_page", params.per_page.toString());
+        const queryString = queryParams.toString();
+        return `/announcements${queryString ? `?${queryString}` : ""}`;
+      },
+    }),
   }),
 });
 
@@ -287,4 +362,10 @@ export const {
   useGetPaymentQuery,
   useUploadPaymentReceiptMutation,
   useConvertBalanceMutation,
+  useGetMyFilesQuery,
+  useGetFileDetailsQuery,
+  useLazyGetFileDetailsQuery,
+  useUploadFileMutation,
+  useDeleteFileMutation,
+  useGetAnnouncementsQuery,
 } = api;
