@@ -86,6 +86,11 @@ export function FileCard({ file, onDeleted }: FileCardProps) {
             <h3 className="font-medium text-base-content truncate">
               {file.client_filename}
             </h3>
+            {file.description && (
+              <p className="text-sm text-base-content/70 mt-1 truncate">
+                {file.description}
+              </p>
+            )}
             <p className="text-sm text-base-content/60 mt-1">
               {typeLabel} &bull; {sizeLabel}
             </p>

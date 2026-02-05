@@ -209,6 +209,7 @@ export interface PaginatedResponse<T> {
 export interface UserFile {
   id: number;
   client_filename: string;
+  description: string | null;
   mime_type: string;
   size: number;
   expires_at: string | null;

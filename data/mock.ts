@@ -221,6 +221,7 @@ export const mockFiles: UserFile[] = [
   {
     id: 1,
     client_filename: "passport_scan.pdf",
+    description: "Passport copy for KYC verification",
     mime_type: "application/pdf",
     size: 2457600,
     is_persistent: true,
@@ -231,6 +232,7 @@ export const mockFiles: UserFile[] = [
   {
     id: 2,
     client_filename: "business_license.jpg",
+    description: null,
     mime_type: "image/jpeg",
     size: 1258291,
     is_persistent: true,

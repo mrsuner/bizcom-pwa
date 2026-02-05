@@ -18,6 +18,7 @@ export function FileUploadModal({
 }: FileUploadModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const [uploadFile, { isLoading }] = useUploadFileMutation();
@@ -35,6 +36,7 @@ export function FileUploadModal({
 
   const handleClose = () => {
     setFile(null);
+    setDescription("");
     setError(null);
     onClose();
   };
@@ -49,10 +51,14 @@ export function FileUploadModal({
 
     const formData = new FormData();
     formData.append("file", file);
+    if (description.trim()) {
+      formData.append("description", description.trim());
+    }
 
     try {
       await uploadFile(formData).unwrap();
       setFile(null);
+      setDescription("");
       onSuccess();
     } catch (err) {
       const message =
@@ -83,6 +89,20 @@ export function FileUploadModal({
         </div>
 
         <FileUpload value={file} onChange={setFile} error={error ?? undefined} />
+
+        <div className="form-control mt-4">
+          <label className="label">
+            <span className="label-text">Description (optional)</span>
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., Passport copy, Company registration"
+            className="input input-bordered w-full"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={500}
+          />
+        </div>
 
         {error && !file && (
           <p className="text-error text-sm mt-2">{error}</p>
