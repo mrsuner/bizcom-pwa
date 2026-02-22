@@ -1,3 +1,8 @@
+> [!WARNING]
+> **This repository has been archived.** All development has moved to the monorepo: [mrsuner/bizcom-crm](https://github.com/mrsuner/bizcom-crm)
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
